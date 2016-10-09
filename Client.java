@@ -9,8 +9,7 @@ public class Client {
 	//------------------------------------
 	//----------- Attributes -------------
 	//------------------------------------
-	
-	
+	int registration_port;
 	
 	//------------------------------------
 	//------------ Methods ---------------
@@ -20,14 +19,16 @@ public class Client {
 		// Open TCP connection and send "R01___.___.___.___"
 		Socket connection = null;
 		try {
-			connection = new Socket(InetAddress.getLocalHost(), 5000);
+			System.out.println("Client is trying to connect...");
+			connection = new Socket(InetAddress.getLocalHost(), this.registration_port);
 			
 			DataOutputStream output = new DataOutputStream(connection.getOutputStream());
 			
-			output.writeBytes("R01");
+			output.writeBytes(MessageCode.REQUEST_REGISTRATION.code_string());
 			
 			// Close socket
 			try {
+				System.out.println("Client is shutting down.");
 				connection.close();
 				output.close();
 			} catch(IOException e) {
@@ -38,6 +39,14 @@ public class Client {
 			System.err.println("Error while opening registration socket in client.");
 			System.err.println(e.getMessage());
 		}
+	}
+
+	//--------------------------------------
+	//----------- Constructors -------------
+	//--------------------------------------
+	public Client()
+	{
+		this.registration_port = Parameters.DEFAULT_PORT.toInt();
 	}
 	
 	//------------------------------------

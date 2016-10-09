@@ -5,6 +5,7 @@ import java.lang.Thread;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 public class Server {
 
@@ -15,7 +16,7 @@ public class Server {
 	private int registration_port;
 	
 	private int max_peers; 
-	private InetAddress[] peers;
+	private ArrayList<InetAddress> peers;
 	
 	private WaitRegistration waiter;
 	
@@ -38,14 +39,21 @@ public class Server {
 		 */
 		public void run() 
 		{
-			// read message from socket
 			BufferedReader input = null;
 			try {
+				// read message from socket
 				input = new BufferedReader( 
 							new InputStreamReader( connection.getInputStream()));
 				String message = input.readLine();
 				
-				System.out.println("SERVER GOT A REQUEST. Here it is: " + message);
+				// register requester IP address, if code was correct
+				if( message.equals(MessageCode.REQUEST_REGISTRATION.code_string()) )
+				{
+					System.out.println("Client was registered.");
+					peers.add( this.connection.getInetAddress() );
+				}
+				else
+					System.out.println("Client registration request has wrong code.");
 				
 			} catch(IOException e) {
 				System.err.println("Error while reading from registration socket.");
@@ -144,9 +152,10 @@ public class Server {
 	
 	public void shutdown()
 	{
+		System.out.println("Server is shutting down after next connection.");
 		this.running = false;
 		
-		// We should send a dummy message to
+		// TODO: We should send a dummy message to
 		// server, so it will unblock .accept()
 		// method and effectively shutdown
 		
@@ -164,9 +173,9 @@ public class Server {
 	//------------------------------------
 	public Server()
 	{
-		this.registration_port = 5000;
+		this.registration_port = Parameters.DEFAULT_PORT.toInt();
 		this.max_peers = 2;
-		this.peers = new InetAddress[this.max_peers];
+		this.peers = new ArrayList<InetAddress>();
 		this.running = true;
 	}
 	
@@ -176,7 +185,9 @@ public class Server {
 		Server s = new Server();
 		s.launch();
 		
-		Thread.currentThread().sleep(1000);
+		//TODO: Fix this. It's horrible.
+		Scanner keystroke = new Scanner(System.in);
+		keystroke.next();
 		
 		s.shutdown();
 		
