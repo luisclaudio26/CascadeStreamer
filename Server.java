@@ -6,6 +6,7 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Server {
 
@@ -15,8 +16,10 @@ public class Server {
 	private boolean running;
 	private int registration_port;
 	
+	//TODO: Maybe this should become a class itself?
 	private int max_peers; 
 	private ArrayList<InetAddress> peers;
+	private final ReentrantLock peers_locker = new ReentrantLock();
 	
 	private WaitRegistration waiter;
 	
@@ -49,8 +52,14 @@ public class Server {
 				// register requester IP address, if code was correct
 				if( message.equals(MessageCode.REQUEST_REGISTRATION.code_string()) )
 				{
-					System.out.println("Client was registered.");
-					peers.add( this.connection.getInetAddress() );
+					// try to push it to the list of registered clients. If we fail,
+					// answer peer with a list of available peers to connect.
+					if( push_new_peer(connection.getInetAddress()))
+						System.out.println("Peer was registered in this server.");
+					else
+					{
+						System.out.println("This server is already full. Sending list of available peers.");
+					}
 				}
 				else
 					System.out.println("Client registration request has wrong code.");
@@ -134,11 +143,22 @@ public class Server {
 	 * @param peer_address IP address of peer, as a plain string object
 	 * @return True if we push it to the peers list, false otherwise
 	 */
-	private boolean push_new_peer(String peer_address)
+	private boolean push_new_peer(InetAddress peer_address)
 	{
-		// Should use lockers here to ensure
-		// integrity of max_peers and peers[].
-		return true;
+		peers_locker.lock();
+		
+		if( peers.size() < max_peers)
+		{
+			peers.add(peer_address);
+			peers_locker.unlock();
+			
+			return true;
+		}
+		else
+		{
+			peers_locker.unlock();
+			return false;
+		}
 	}
 	
 	//------------------------------------------------
