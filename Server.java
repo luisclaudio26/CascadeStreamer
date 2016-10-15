@@ -99,6 +99,8 @@ public class Server {
 						output.writeBytes(MessageCode.DENY_AND_SUGGEST.code_string() + " " + peer_list.toString() + "\n");
 					}
 				}
+				else if( message.equals(MessageCode.SHUTDOWN_REGISTRATION_SERVER.code_string()))
+					System.out.println("Dummy connection.");
 				else
 					System.out.println("Client registration request has wrong code.");
 				
@@ -216,6 +218,15 @@ public class Server {
 		// TODO: We should send a dummy message to
 		// server, so it will unblock .accept()
 		// method and effectively shutdown
+		try {
+			Socket dummy = new Socket(InetAddress.getLocalHost(), this.registration_port);
+			System.out.println("Dummy connection established.");
+			DataOutputStream out = new DataOutputStream( dummy.getOutputStream() );
+			out.writeBytes(MessageCode.SHUTDOWN_REGISTRATION_SERVER.code_string() + "\n");
+		} catch(IOException e) {
+			System.out.println("Error while opening dummy socket.");
+			System.out.println(e.getMessage());
+		}
 		
 		try {
 			//Server can close only
