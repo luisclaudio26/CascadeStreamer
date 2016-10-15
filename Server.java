@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -10,14 +11,47 @@ public class Server implements IServerData, IStreamTarget {
 	//----------- Attributes -------------
 	//------------------------------------
 	private int registration_port;
+	private int streaming_port;
+	private DatagramSocket stream_out_socket;
 	
-	//TODO: Maybe this should become a class itself?
+	//TODO: Maybe this should become a class itself? YES, implemented as a monitor.
 	private int max_peers; 
 	private ArrayList<InetAddress> peers;
 	private final ReentrantLock peers_locker = new ReentrantLock();
 	
 	private RegistrationDesk waiter;
 	private Streamer streamer;
+	
+	//--------------------------------------
+	//----------- Internal ops -------------
+	//--------------------------------------
+	//TODO: Ideally, we should have one thread per
+	//connection and a common buffer. The streamer
+	//would write to the common buffer, thread-safe,
+	//and then each thread would make a copy of the
+	//data and send it.
+	private void send_data_to_peers(String data)
+	{
+		System.out.println("Sending data: " + data);
+		
+		for(InetAddress peer : peers)
+		{
+			DatagramPacket packet = new DatagramPacket(data.getBytes(), 
+														data.getBytes().length,
+														peer,
+														this.streaming_port);
+			
+			try
+			{
+				stream_out_socket.send(packet);
+			} 
+			catch (IOException e) 
+			{
+				System.err.println("Error while streaming data to peers.");
+				System.err.println( e.getMessage());
+			}
+		}
+	}
 	
 	//---------------------------------------------
 	//------------ From IServerData ---------------
@@ -53,8 +87,7 @@ public class Server implements IServerData, IStreamTarget {
 	@Override
 	public void push_data(String data) 
 	{
-		System.out.println("Got stream data: " + data);
-		return;
+		this.send_data_to_peers(data);
 	}
 	
 	//------------------------------------------------
@@ -65,8 +98,19 @@ public class Server implements IServerData, IStreamTarget {
 		// Launch thread that waits for incoming registration requests
 		this.waiter = new RegistrationDesk(this, this.registration_port);
 		
-		// Launch thread that streams data using UDP protocol
+		// Launch thread that streams data
 		this.streamer = new Streamer(500, this);
+		
+		// Open socket for UDP streaming
+		try 
+		{
+			this.stream_out_socket = new DatagramSocket(this.streaming_port);
+		} 
+		catch (SocketException e) 
+		{
+			System.err.println("Error while opening streaming socket.");
+			System.err.println( e.getMessage());
+		}
 	}
 	
 	public void shutdown()
@@ -94,6 +138,8 @@ public class Server implements IServerData, IStreamTarget {
 	public Server()
 	{
 		this.registration_port = Parameters.DEFAULT_PORT.toInt();
+		this.streaming_port = Parameters.STREAMING_PORT.toInt();
+		this.stream_out_socket = null;
 		this.max_peers = 2;
 		this.peers = new ArrayList<InetAddress>();
 		this.waiter = null;
