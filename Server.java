@@ -86,6 +86,17 @@ public class Server {
 					else
 					{
 						System.out.println("This server is already full. Sending list of available peers.");
+						
+						//builder peer list
+						StringBuilder peer_list = new StringBuilder();
+						peer_list.append( peers.size() + " " );
+						for(InetAddress peer : peers)
+						{
+							peer_list.append(peer.toString());
+							peer_list.append(" ");
+						}
+						
+						output.writeBytes(MessageCode.DENY_AND_SUGGEST.code_string() + " " + peer_list.toString() + "\n");
 					}
 				}
 				else
