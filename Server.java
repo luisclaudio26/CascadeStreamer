@@ -56,7 +56,7 @@ public class Server implements IServerData {
 	@Override
 	public int peer_count() { return peers.size(); }
 
-	@Override //TODO: Return unmodifiable iterator
+	@Override //TODO: Return unmodifiable iterator. Also: THIS IS NOT THREAD-SAFE! Think solution for this.
 	public Iterator<InetAddress> peers() { return peers.iterator(); }
 
 	//------------------------------------------------
