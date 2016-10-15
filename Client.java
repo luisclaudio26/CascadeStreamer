@@ -11,7 +11,8 @@ public class Client {
 	//------------------------------------
 	//----------- Attributes -------------
 	//------------------------------------
-	int registration_port;
+	private int registration_port;
+	private InetAddress connected_server;
 	
 	//------------------------------------
 	//------------ Methods ---------------
@@ -35,12 +36,23 @@ public class Client {
 			}
 			
 			// wait reply
-			System.out.println("Client is waiting for response...");
 			BufferedReader input = new BufferedReader( 
 					new InputStreamReader( connection.getInputStream()));
 			String reply = input.readLine();
 			
-			System.out.println("SERVER REPLIED WITH: " + reply);
+			System.out.println("Server replied: " + reply);
+			
+			String reply_code = reply.substring(0, 3);
+			
+			if( reply_code.equals(MessageCode.ACCEPT_REGISTRATION.code_string()) )
+			{
+				System.out.println("Server accepted connection.");
+				this.connected_server = connection.getInetAddress();
+			}
+			else if( reply_code.equals(MessageCode.DENY_AND_SUGGEST.code_string()))
+			{
+				System.out.println("Server denied connection. Trying server-recommended peers.");
+			}
 			
 			// Close socket
 			try {
