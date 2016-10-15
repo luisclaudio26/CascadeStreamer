@@ -4,7 +4,7 @@ import java.util.Iterator;
 import java.util.Scanner;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class Server implements IServerData {
+public class Server implements IServerData, IStreamTarget {
 
 	//------------------------------------
 	//----------- Attributes -------------
@@ -17,19 +17,7 @@ public class Server implements IServerData {
 	private final ReentrantLock peers_locker = new ReentrantLock();
 	
 	private RegistrationDesk waiter;
-	
-	//----------------------------------
-	//----------- Messages -------------
-	//----------------------------------	
-	private String msg_accept_registration()
-	{
-		return "ACCEPT_REGISTRATION";
-	}
-	
-	private String msg_deny_and_suggest()
-	{
-		return "DENY_AND_SUGGEST";
-	}
+	private Streamer streamer;
 	
 	//---------------------------------------------
 	//------------ From IServerData ---------------
@@ -59,6 +47,16 @@ public class Server implements IServerData {
 	@Override //TODO: Return unmodifiable iterator. Also: THIS IS NOT THREAD-SAFE! Think solution for this.
 	public Iterator<InetAddress> peers() { return peers.iterator(); }
 
+	//-----------------------------------------------
+	//------------ From IStreamTarget ---------------
+	//-----------------------------------------------
+	@Override
+	public void push_data(String data) 
+	{
+		System.out.println("Got stream data: " + data);
+		return;
+	}
+	
 	//------------------------------------------------
 	//------------ External operations ---------------
 	//------------------------------------------------
@@ -67,18 +65,25 @@ public class Server implements IServerData {
 		// Launch thread that waits for incoming registration requests
 		this.waiter = new RegistrationDesk(this, this.registration_port);
 		
-		// TODO: launch thread that streams data using UDP protocol
+		// Launch thread that streams data using UDP protocol
+		this.streamer = new Streamer(500, this);
 	}
 	
 	public void shutdown()
 	{		
-		try {
+		try 
+		{
 			//Server can close only after RegistrationDesk 
-			//object is done with its work
+			//and Streamer objects are done.
 			this.waiter.shutdown();
+			this.streamer.shutdown();
+			
 			this.waiter.join();
-		} catch (InterruptedException e) {
-			System.err.println("RegistrationDesk thread was interrupted and was not correctly closed.");
+			this.streamer.join();
+		} 
+		catch (InterruptedException e) 
+		{
+			System.err.println("Either RegistrationDesk or Streamer thread was interrupted and was not correctly closed.");
 			System.err.println(e.getMessage());
 		}
 	}
@@ -91,6 +96,8 @@ public class Server implements IServerData {
 		this.registration_port = Parameters.DEFAULT_PORT.toInt();
 		this.max_peers = 2;
 		this.peers = new ArrayList<InetAddress>();
+		this.waiter = null;
+		this.streamer = null;
 	}
 	
 	//------------------------------------

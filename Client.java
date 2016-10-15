@@ -53,15 +53,18 @@ public class Client {
 	private List<InetAddress> require_register(InetAddress server_ip)
 	{
 		List<InetAddress> potential_peers = new ArrayList<InetAddress>();
-		
-		// Open TCP connection and send "R01___.___.___.___"
 		Socket connection = null;
+		
 		try {
 			System.out.println("Client is trying to connect...");
+			
+			// open socket and associated resources
 			connection = new Socket(server_ip, this.registration_port);
 			DataOutputStream output = new DataOutputStream(connection.getOutputStream());
+			BufferedReader input = new BufferedReader( 
+					new InputStreamReader( connection.getInputStream()));
 			
-			// Send request
+			// 1) Send registration request
 			try {
 				output.writeBytes(MessageCode.REQUEST_REGISTRATION.code_string() + "\n");
 				System.out.println("Client requested registration.");
@@ -70,31 +73,31 @@ public class Client {
 				System.err.println( e.getMessage() );
 			}
 			
-			// wait reply
-			BufferedReader input = new BufferedReader( 
-					new InputStreamReader( connection.getInputStream()));
+			// 2) Wait response
 			String reply = input.readLine();
-			
 			System.out.println("Server replied with: " + reply);
 			
 			String reply_code = reply.substring(0, 3);
-			
 			if( reply_code.equals(MessageCode.ACCEPT_REGISTRATION.code_string()) )
 			{
+				// 3.1) connection accepted
 				System.out.println("Server accepted connection.");
 				this.connected_server = connection.getInetAddress();
 			}
 			else if( reply_code.equals(MessageCode.DENY_AND_SUGGEST.code_string()))
 			{
+				// 3.2) connection refused
 				System.out.println("Server denied connection. Trying server-recommended peers.");
 				potential_peers = parse_peer_list( reply );
 			}
 			
-			// Close socket
+			// 4) close socket
 			try {
 				System.out.println("Client is shutting down.");
+				
 				connection.close();
 				output.close();
+				input.close();
 			} catch(IOException e) {
 				System.err.println("Error while closing registration socket in client.");
 				System.err.println(e.getMessage());
