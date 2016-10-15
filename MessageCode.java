@@ -1,7 +1,9 @@
 
 public enum MessageCode 
-{
-	REQUEST_REGISTRATION("R01");
+{ 
+	REQUEST_REGISTRATION("R01"),
+	ACCEPT_REGISTRATION("R02"),
+	DENY_AND_SUGGEST("R03");
 	
 	// Attributes
 	String code;

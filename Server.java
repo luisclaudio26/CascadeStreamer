@@ -1,4 +1,5 @@
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.Thread;
@@ -23,6 +24,19 @@ public class Server {
 	
 	private WaitRegistration waiter;
 	
+	//----------------------------------
+	//----------- Messages -------------
+	//----------------------------------	
+	private String msg_accept_registration()
+	{
+		return "ACCEPT_REGISTRATION";
+	}
+	
+	private String msg_deny_and_suggest()
+	{
+		return "DENY_AND_SUGGEST";
+	}
+	
 	//----------------------------------------
 	//----------- Multithreading -------------
 	//----------------------------------------
@@ -43,19 +57,32 @@ public class Server {
 		public void run() 
 		{
 			BufferedReader input = null;
-			try {
+			try {				
 				// read message from socket
 				input = new BufferedReader( 
-							new InputStreamReader( connection.getInputStream()));
+							new InputStreamReader( connection.getInputStream()));				
 				String message = input.readLine();
+				
+				System.out.println("Server got: " + message);
 				
 				// register requester IP address, if code was correct
 				if( message.equals(MessageCode.REQUEST_REGISTRATION.code_string()) )
 				{
+					DataOutputStream output = null;
+					try {
+						output = new DataOutputStream( connection.getOutputStream());
+					} catch(IOException e) {
+						System.err.println("Error while trying to open output stream.");
+						System.err.println( e.getMessage() );
+					}
+								
 					// try to push it to the list of registered clients. If we fail,
 					// answer peer with a list of available peers to connect.
 					if( push_new_peer(connection.getInetAddress()))
+					{
 						System.out.println("Peer was registered in this server.");
+						output.writeBytes(MessageCode.ACCEPT_REGISTRATION.code_string() + "\n");
+					}
 					else
 					{
 						System.out.println("This server is already full. Sending list of available peers.");
@@ -140,7 +167,7 @@ public class Server {
 	//------------ Access method ---------------
 	//------------------------------------------
 	/**
-	 * @param peer_address IP address of peer, as a plain string object
+	 * @param peer_address IP address of peer
 	 * @return True if we push it to the peers list, false otherwise
 	 */
 	private boolean push_new_peer(InetAddress peer_address)
