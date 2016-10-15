@@ -8,16 +8,19 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Scanner;
 
 // TODO: Create a common enumeration with ports and IPs
 
-public class Client {
+public class Client implements IStreamTarget {
 
 	//------------------------------------
 	//----------- Attributes -------------
 	//------------------------------------
+	private InetAddress actual_server;
 	private int registration_port;
 	private InetAddress connected_server;
+	private DownloadStream down_stream;
 	
 	//------------------------------------
 	//------------ Methods ---------------
@@ -143,18 +146,53 @@ public class Client {
 	//--------------------------------------
 	//----------- Constructors -------------
 	//--------------------------------------
-	public Client()
+	public Client(InetAddress server)
 	{
 		this.registration_port = Parameters.DEFAULT_PORT.toInt();
 		this.connected_server = null;
+		this.actual_server = server;
+		this.down_stream = null;
+	}
+
+	//----------------------------------------
+	//---------- From IStreamTarget ----------
+	//----------------------------------------
+	@Override
+	public void push_data(String data) 
+	{
+		System.out.println("Stream data: " + data);
+	}
+	
+	//---------------------------------------------
+	//----------- External operations -------------
+	//---------------------------------------------
+	public void launch()
+	{
+		//register to some server
+		this.require_register(Collections.singletonList(this.actual_server));
+		
+		//launch download thread
+		this.down_stream = new DownloadStream(this);
+	}
+	
+	public void shutdown()
+	{
+		this.down_stream.shutdown();
 	}
 	
 	//------------------------------------
 	public static void main(String[] args) throws UnknownHostException 
 	{
-		Client C = new Client();
-		C.require_register(Collections.singletonList(InetAddress.getLocalHost()));
+		Client C = new Client( InetAddress.getLocalHost() );
+		
+		C.launch();	
+
+		//TODO: Fix this. It's horrible.
+		Scanner keystroke = new Scanner(System.in);
+		keystroke.next();
+		
+		C.shutdown();
+		
 		return;
 	}
-
 }
