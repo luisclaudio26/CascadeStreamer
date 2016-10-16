@@ -32,6 +32,8 @@ public class Server implements IServerData, IStreamTarget {
 	//data and send it.
 	private void send_data_to_peers(String data)
 	{	
+		//TODO: here, we should encapsulate the data into
+		//the correct format.
 		for(InetAddress peer : peers)
 		{
 			DatagramPacket packet = new DatagramPacket(data.getBytes(), 
@@ -39,7 +41,7 @@ public class Server implements IServerData, IStreamTarget {
 														peer,
 														this.streaming_port);
 			
-			System.out.println("Delivering data to " + peer.getAddress() + " in port " + this.streaming_port);
+			System.out.println("Delivering data to " + peer.getHostAddress() + " in port " + this.streaming_port);
 			
 			try
 			{
@@ -88,6 +90,12 @@ public class Server implements IServerData, IStreamTarget {
 	public void push_data(String data) 
 	{
 		this.send_data_to_peers(data);
+	}
+	
+	@Override
+	public void eot()
+	{
+		//TODO: send EOT packet to peers
 	}
 	
 	//------------------------------------------------

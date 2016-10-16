@@ -41,7 +41,8 @@ public class Streamer extends Thread
 	{
 		int count = 0;
 		
-		while(running)
+		//send only 40 packets
+		while(running && count < 40)
 		{
 			target.push_data("Stream packet no. " + count++);
 			
@@ -52,5 +53,8 @@ public class Streamer extends Thread
 				System.err.println( e.getMessage());
 			}
 		}
+		
+		//notify that we ended the transmission
+		target.eot();
 	}
 }

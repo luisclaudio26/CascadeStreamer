@@ -163,6 +163,12 @@ public class Client implements IStreamTarget {
 		System.out.println("Received stream data: " + data);
 	}
 	
+	@Override
+	public void eot()
+	{
+		//TODO: here we should shutdown
+	}
+	
 	//---------------------------------------------
 	//----------- External operations -------------
 	//---------------------------------------------
@@ -178,6 +184,9 @@ public class Client implements IStreamTarget {
 	public void shutdown()
 	{
 		this.down_stream.shutdown();
+		
+		//TODO: we must notify server that we disconnected via registration port.
+		//This means we can't close TCP registration connection.
 	}
 	
 	//------------------------------------

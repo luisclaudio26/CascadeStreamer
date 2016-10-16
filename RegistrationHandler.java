@@ -43,6 +43,7 @@ public class RegistrationHandler extends Thread
 			System.out.println("Server got: " + message);
 			
 			// register requester IP address, if code was correct
+			//TODO: Here we should handle the case REMOVE_REGISTRATION.
 			if( message.equals(MessageCode.REQUEST_REGISTRATION.code_string()) )
 			{
 				DataOutputStream output = null;

@@ -25,8 +25,7 @@ public class DownloadStream extends Thread
 		this.target = tgt;
 		this.running = true;
 		
-		try 
-		{
+		try {
 			this.socket = new DatagramSocket(Parameters.STREAMING_PORT.toInt());
 		} 
 		catch (SocketException e) 
@@ -45,6 +44,9 @@ public class DownloadStream extends Thread
 	{
 		//TODO: this won't shutdown connection unless we send another packet
 		this.running = false;
+		
+		//close socket
+		this.socket.close();
 	}
 	
 	//------------------------------
@@ -69,6 +71,8 @@ public class DownloadStream extends Thread
 				byte[] data = packet.getData();
 				String data_s = new String(data, 0, packet.getLength());
 				
+				//TODO: Here we should analyse the header and decide whether to push_data
+				//or to send a eot() signal.
 				this.target.push_data(data_s);
 			} 
 			catch (IOException e) 
