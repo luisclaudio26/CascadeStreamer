@@ -160,7 +160,7 @@ public class Client implements IStreamTarget {
 	@Override
 	public void push_data(String data) 
 	{
-		System.out.println("Stream data: " + data);
+		System.out.println("Received stream data: " + data);
 	}
 	
 	//---------------------------------------------

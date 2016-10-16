@@ -31,15 +31,15 @@ public class Server implements IServerData, IStreamTarget {
 	//and then each thread would make a copy of the
 	//data and send it.
 	private void send_data_to_peers(String data)
-	{
-		System.out.println("Sending data: " + data);
-		
+	{	
 		for(InetAddress peer : peers)
 		{
 			DatagramPacket packet = new DatagramPacket(data.getBytes(), 
 														data.getBytes().length,
 														peer,
 														this.streaming_port);
+			
+			System.out.println("Delivering data to " + peer.getAddress() + " in port " + this.streaming_port);
 			
 			try
 			{
@@ -104,7 +104,7 @@ public class Server implements IServerData, IStreamTarget {
 		// Open socket for UDP streaming
 		try 
 		{
-			this.stream_out_socket = new DatagramSocket(this.streaming_port);
+			this.stream_out_socket = new DatagramSocket();
 		} 
 		catch (SocketException e) 
 		{

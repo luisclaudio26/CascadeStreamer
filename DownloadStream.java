@@ -56,7 +56,7 @@ public class DownloadStream extends Thread
 		//Keep waiting for incoming packets,
 		//write to Target once we receive something.
 		while(running)
-		{
+		{			
 			byte[] buffer = new byte[Parameters.STREAMING_BUFFER_SIZE.toInt()];
 			DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 			
