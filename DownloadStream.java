@@ -42,10 +42,7 @@ public class DownloadStream extends Thread
 	//--------------------------
 	public void shutdown()
 	{
-		//TODO: this won't shutdown connection unless we send another packet
 		this.running = false;
-		
-		//close socket
 		this.socket.close();
 	}
 	
@@ -71,15 +68,20 @@ public class DownloadStream extends Thread
 				byte[] data = packet.getData();
 				String data_s = new String(data, 0, packet.getLength());
 				
-				//TODO: Here we should analyse the header and decide whether to push_data
+				//TODO: Here we should analyze the header and decide whether to push_data
 				//or to send a eot() signal.
 				this.target.push_data(data_s);
 			} 
 			catch (IOException e) 
 			{
+				//When we close the socket, an exception will be risen; is it safe to ignore
+				//it, 'though, because RUNNING flag is set to false.
+				if(!running) return;
+				
+				//if we reach this point, it is so because exception was thrown
+				//while thread was supposed to be running normally; log the error.
 				System.err.println("Error while waiting for incoming packet on UDP socket.");
 				System.err.println( e.getMessage());
-				return;
 			}
 		}
 	}
