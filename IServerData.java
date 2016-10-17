@@ -16,7 +16,6 @@ public interface IServerData {
 	 */
 	public boolean push_new_peer(InetAddress peer_ip);
 	
-	//TODO: Implement this.
 	public void pop_peer(InetAddress peer_ip);
 	
 	public int peer_count();

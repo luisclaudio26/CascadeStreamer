@@ -123,7 +123,6 @@ public class Server implements IServerData, IStreamTarget {
 	@Override
 	public void eot()
 	{
-		//TODO: send EOT packet to peers
 		System.out.println("Transmission has ended.");
 		this.send_eot_to_peers();
 	}

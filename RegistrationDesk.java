@@ -76,9 +76,7 @@ public class RegistrationDesk extends Thread
 				children.add(p);
 			}
 			
-			// Wait for children to die. TODO: we don't remove
-			// processes from list after they die, which is very
-			// dangerous.
+			// Wait for children to die.
 			for(RegistrationHandler p : children)
 				try {
 					p.join();
