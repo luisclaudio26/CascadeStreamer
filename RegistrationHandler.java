@@ -77,8 +77,6 @@ public class RegistrationHandler extends Thread
 					output.writeBytes(MessageCode.DENY_AND_SUGGEST.code_string() + " " + peer_list.toString() + "\n");
 				}
 			}
-			else if( message.equals(MessageCode.SHUTDOWN_REGISTRATION_SERVER.code_string()))
-				System.out.println("Dummy connection.");
 			else if( message.equals(MessageCode.REMOVE_REGISTRATION.code_string()))
 			{
 				this.server.pop_peer( connection.getInetAddress() );

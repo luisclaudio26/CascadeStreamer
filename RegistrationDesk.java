@@ -1,6 +1,4 @@
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -19,6 +17,7 @@ public class RegistrationDesk extends Thread
 	private int port;
 	private boolean running;
 	private IServerData server;
+	private ServerSocket listener_socket;
 	
 	//---------------------------
 	//--------- Methods ---------
@@ -28,6 +27,7 @@ public class RegistrationDesk extends Thread
 		this.port = registration_port;
 		this.server = server;
 		this.running = true;
+		this.listener_socket = null;
 		this.start();
 	}
 
@@ -35,17 +35,11 @@ public class RegistrationDesk extends Thread
 	{
 		this.running = false;
 		
-		//send dummy message so to close socket
-		try 
-		{
-			Socket dummy = new Socket(InetAddress.getLocalHost(), this.port);
-			DataOutputStream dummy_out = new DataOutputStream( dummy.getOutputStream() );
-			dummy_out.writeBytes(MessageCode.SHUTDOWN_REGISTRATION_SERVER.code_string() + "\n");
-		} 
-		catch (IOException e) 
-		{
-			System.err.println("Error while creating dummy connection to RegistrationDesk.");
-			System.err.println(e.getMessage());
+		try {
+			this.listener_socket.close();
+		} catch (IOException e) {
+			System.err.println("Error while closing RegistrationDesk listener socket.");
+			System.err.println( e.getMessage());
 		}
 	}
 	
@@ -58,11 +52,9 @@ public class RegistrationDesk extends Thread
 		// Holds all processes launched so we 
 		// can wait for them to die in peace.
 		List<RegistrationHandler> children = new ArrayList<RegistrationHandler>();
-		
-		// Open listening socket
-		ServerSocket listener_socket = null;
-		
-		try {
+					
+		try 
+		{
 			listener_socket = new ServerSocket(this.port);
 			
 			// accept incoming connections and launch them
@@ -92,7 +84,15 @@ public class RegistrationDesk extends Thread
 				System.err.println("Error while closing socket: ");
 				System.err.println(e.getMessage());
 			}
-		} catch(IOException e) {
+		} 
+		catch(IOException e) 
+		{	
+			//If SocketException was thrown and running flag was set to false,
+			//this means we closed socket intentionally, so nothing is wrong!
+			if(!running) return;
+			
+			//If we reached this part, socket was closed while server was
+			//running; there's a problem!
 			System.err.println("Error while opening socket: ");
 			System.err.println(e.getMessage());
 		}

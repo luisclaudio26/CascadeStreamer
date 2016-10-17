@@ -157,6 +157,9 @@ public class Client implements IStreamTarget {
 			//open connection to server using registration port,
 			//write a Remove Registration code and close. We don't
 			//need to expect any reply of any type.
+			
+			System.out.println("Client is registering itself out of connected server.");
+			
 			Socket connection = new Socket(this.connected_server, this.registration_port);
 			DataOutputStream output = new DataOutputStream(connection.getOutputStream());
 			
@@ -201,7 +204,7 @@ public class Client implements IStreamTarget {
 	@Override
 	public void eot()
 	{
-		System.out.println("Transmission has ended. Shutting down.");
+		System.out.println("Transmission has ended.");
 		
 		//we disconnect from this streaming server
 		this.disconnect();
