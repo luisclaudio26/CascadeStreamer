@@ -39,7 +39,6 @@ public class Server implements IServerData, IStreamTarget {
 	//data and send it.
 	private void send_data_to_peers(String data)
 	{	
-		//TODO: still not the correct format for packet
 		String msg = pack_stream_data(data);
 		
 		for(InetAddress peer : peers)
