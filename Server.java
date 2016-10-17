@@ -83,6 +83,9 @@ public class Server implements IServerData, IStreamTarget {
 	@Override //TODO: Return unmodifiable iterator. Also: THIS IS NOT THREAD-SAFE! Think solution for this.
 	public Iterator<InetAddress> peers() { return peers.iterator(); }
 
+	@Override
+	public void pop_peer(InetAddress peer_ip) { peers.remove(peer_ip); }
+	
 	//-----------------------------------------------
 	//------------ From IStreamTarget ---------------
 	//-----------------------------------------------

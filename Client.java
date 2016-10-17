@@ -96,7 +96,7 @@ public class Client implements IStreamTarget {
 			
 			// 4) close socket
 			try {
-				System.out.println("Client is shutting down.");
+				System.out.println("Client is closing registration socket.");
 				
 				connection.close();
 				output.close();
@@ -231,6 +231,8 @@ public class Client implements IStreamTarget {
 			System.err.println("Error while joining thread DownloadStream.");
 			System.err.println( e.getMessage());
 		}
+		
+		System.out.println("Client is shutting down.");
 	}
 	
 	//------------------------------------
