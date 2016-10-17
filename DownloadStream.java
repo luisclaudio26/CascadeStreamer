@@ -40,6 +40,17 @@ public class DownloadStream extends Thread
 	//--------------------------
 	//-------- Methods ---------
 	//--------------------------
+	private String unpack_stream_data(String packet)
+	{
+		String[] field = packet.split(" ");
+		
+		StringBuilder theResult = new StringBuilder();
+		for(int i = 2; i < field.length; i++)
+			theResult.append(field[i] + " ");
+		
+		return theResult.toString();
+	}
+	
 	/**
 	 * This effectively unsets Running flag
 	 * and closes socket, which should cause run()
@@ -81,7 +92,7 @@ public class DownloadStream extends Thread
 				String code = data_s.substring(0, 3);
 				
 				if(code.equals(MessageCode.STREAM_PACKET.code_string()))
-					this.target.push_data(data_s);
+					this.target.push_data( this.unpack_stream_data( data_s));
 				else if(code.equals(MessageCode.END_OF_TRANSMISSION.code_string()))
 				{
 					this.target.eot();

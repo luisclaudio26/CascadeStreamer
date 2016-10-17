@@ -25,6 +25,13 @@ public class Server implements IServerData, IStreamTarget {
 	//--------------------------------------
 	//----------- Internal ops -------------
 	//--------------------------------------
+	private String pack_stream_data(String data)
+	{
+		int hash = data.hashCode();
+		return MessageCode.STREAM_PACKET.code_string() + " "
+				+ hash + " " + data;
+	}
+	
 	//TODO: Ideally, we should have one thread per
 	//connection and a common buffer. The streamer
 	//would write to the common buffer, thread-safe,
@@ -33,7 +40,7 @@ public class Server implements IServerData, IStreamTarget {
 	private void send_data_to_peers(String data)
 	{	
 		//TODO: still not the correct format for packet
-		String msg = MessageCode.STREAM_PACKET.code_string() + " " + data;
+		String msg = pack_stream_data(data);
 		
 		for(InetAddress peer : peers)
 		{
