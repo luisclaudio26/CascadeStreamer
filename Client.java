@@ -143,6 +143,39 @@ public class Client implements IStreamTarget {
 		}
 	}
 
+	/**
+	 * Here we request connected_server to remove our registration.
+	 */
+	public void remove_register()
+	{
+		//If we're not connected to anyone, then
+		//no need to disconnect.
+		if(this.connected_server == null) return;
+		
+		try 
+		{
+			//open connection to server using registration port,
+			//write a Remove Registration code and close. We don't
+			//need to expect any reply of any type.
+			Socket connection = new Socket(this.connected_server, this.registration_port);
+			DataOutputStream output = new DataOutputStream(connection.getOutputStream());
+			
+			output.writeBytes( MessageCode.REMOVE_REGISTRATION.code_string() + "\n" );
+			
+			try {
+				connection.close();
+			} catch(IOException e) {
+				System.err.println("Error while closing socket to remove registration.");
+				System.err.println( e.getMessage());
+			}
+		} 
+		catch (IOException e) 
+		{
+			System.err.println("Error while opening socket to remove registration.");
+			System.err.println( e.getMessage() );
+		}
+	}
+	
 	//--------------------------------------
 	//----------- Constructors -------------
 	//--------------------------------------
@@ -166,7 +199,10 @@ public class Client implements IStreamTarget {
 	@Override
 	public void eot()
 	{
-		//TODO: here we should shutdown
+		//it is not compulsory to shutdown client completely
+		//after end of transmission, but in this simple 
+		//implementation we do so
+		this.shutdown();
 	}
 	
 	//---------------------------------------------
@@ -183,10 +219,18 @@ public class Client implements IStreamTarget {
 	
 	public void shutdown()
 	{
+		//notify server we're disconnecting
+		this.remove_register();
+
+		//shutdown download stream and wait for
+		//it to terminate completely.
 		this.down_stream.shutdown();
-		
-		//TODO: we must notify server that we disconnected via registration port.
-		//This means we can't close TCP registration connection.
+		try {
+			this.down_stream.join();
+		} catch (InterruptedException e) {
+			System.err.println("Error while joining thread DownloadStream.");
+			System.err.println( e.getMessage());
+		}
 	}
 	
 	//------------------------------------

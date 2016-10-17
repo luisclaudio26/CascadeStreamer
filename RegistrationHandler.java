@@ -80,6 +80,10 @@ public class RegistrationHandler extends Thread
 			}
 			else if( message.equals(MessageCode.SHUTDOWN_REGISTRATION_SERVER.code_string()))
 				System.out.println("Dummy connection.");
+			else if( message.equals(MessageCode.REMOVE_REGISTRATION.code_string()))
+			{
+				System.out.println(connection.getInetAddress().getHostName() + " is removing its registration.");
+			}
 			else
 				System.out.println("Client registration request has wrong code.");
 			
