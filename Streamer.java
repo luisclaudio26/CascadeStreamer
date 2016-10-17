@@ -42,7 +42,7 @@ public class Streamer extends Thread
 		int count = 0;
 		
 		//send only 40 packets
-		while(running && count < 40)
+		while(running && count < 30)
 		{
 			target.push_data("Stream packet no. " + count++);
 			

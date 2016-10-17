@@ -162,6 +162,8 @@ public class Client implements IStreamTarget {
 			
 			output.writeBytes( MessageCode.REMOVE_REGISTRATION.code_string() + "\n" );
 			
+			this.connected_server = null;
+			
 			try {
 				connection.close();
 			} catch(IOException e) {
@@ -199,10 +201,10 @@ public class Client implements IStreamTarget {
 	@Override
 	public void eot()
 	{
-		//it is not compulsory to shutdown client completely
-		//after end of transmission, but in this simple 
-		//implementation we do so
-		this.shutdown();
+		System.out.println("Transmission has ended. Shutting down.");
+		
+		//we disconnect from this streaming server
+		this.disconnect();
 	}
 	
 	//---------------------------------------------
@@ -215,39 +217,51 @@ public class Client implements IStreamTarget {
 		
 		//launch download thread
 		this.down_stream = new DownloadStream(this);
+		
+		//it is not always the case that we want to
+		//shutdown completely after a streaming (we
+		//could use the client to connect to another
+		//server, for example), but in this simple
+		//implementation we'll just do this.
+		//Ideally, the main thread should keep listening
+		//to events (incoming connections from peers,
+		//keyboard input).
+		try {
+			this.down_stream.join();
+		} catch (InterruptedException e) {
+			System.err.println("Error while joining DownloadStream thread.");
+			System.err.println( e.getMessage() );
+		}
 	}
 	
-	public void shutdown()
+	public void disconnect()
 	{
 		//notify server we're disconnecting
 		this.remove_register();
 
-		//shutdown download stream and wait for
-		//it to terminate completely.
+		//Another thread must be spawned to close
+		//DownloadStream. Calling join() here
+		//will cause deadlock (as DownloadStream calls
+		//eot(), eot() calls shutdown(). If we join()
+		//in this point we're effectively telling
+		//DownloadStream to wait for itself to finish).
+		//But why don't just finish DownloadStream after.
+		//
+		//UPDATE: Finally, we'll won't spawn any new thread
+		//to close down_stream (because it is closing itself
+		//after a EOT). Be careful while using this! This allows
+		//us 'though to close client from terminal while
+		//streaming goes on (which was not possible in the
+		//later solution).
 		this.down_stream.shutdown();
-		try {
-			this.down_stream.join();
-		} catch (InterruptedException e) {
-			System.err.println("Error while joining thread DownloadStream.");
-			System.err.println( e.getMessage());
-		}
-		
-		System.out.println("Client is shutting down.");
 	}
 	
 	//------------------------------------
 	public static void main(String[] args) throws UnknownHostException 
 	{
 		Client C = new Client( InetAddress.getLocalHost() );
-		
-		C.launch();	
-
-		//TODO: Fix this. It's horrible.
-		Scanner keystroke = new Scanner(System.in);
-		keystroke.next();
-		
-		C.shutdown();
-		
+		C.launch();
+				
 		return;
 	}
 }

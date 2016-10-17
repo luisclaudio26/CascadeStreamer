@@ -32,12 +32,13 @@ public class Server implements IServerData, IStreamTarget {
 	//data and send it.
 	private void send_data_to_peers(String data)
 	{	
-		//TODO: here, we should encapsulate the data into
-		//the correct format.
+		//TODO: still not the correct format for packet
+		String msg = MessageCode.STREAM_PACKET.code_string() + " " + data;
+		
 		for(InetAddress peer : peers)
 		{
-			DatagramPacket packet = new DatagramPacket(data.getBytes(), 
-														data.getBytes().length,
+			DatagramPacket packet = new DatagramPacket(msg.getBytes(), 
+														msg.getBytes().length,
 														peer,
 														this.streaming_port);
 			
@@ -50,6 +51,30 @@ public class Server implements IServerData, IStreamTarget {
 			catch (IOException e) 
 			{
 				System.err.println("Error while streaming data to peers.");
+				System.err.println( e.getMessage());
+			}
+		}
+	}
+	
+	private void send_eot_to_peers()
+	{
+		String data = MessageCode.END_OF_TRANSMISSION.code_string();
+		for(InetAddress peer : peers)
+		{
+			DatagramPacket packet = new DatagramPacket(data.getBytes(), 
+														data.getBytes().length,
+														peer,
+														this.streaming_port);
+			
+			System.out.println("Delivering EOT to " + peer.getHostAddress() + " in port " + this.streaming_port);
+			
+			try
+			{
+				stream_out_socket.send(packet);
+			} 
+			catch (IOException e) 
+			{
+				System.err.println("Error while streaming EOT to peers.");
 				System.err.println( e.getMessage());
 			}
 		}
@@ -99,6 +124,8 @@ public class Server implements IServerData, IStreamTarget {
 	public void eot()
 	{
 		//TODO: send EOT packet to peers
+		System.out.println("Transmission has ended.");
+		this.send_eot_to_peers();
 	}
 	
 	//------------------------------------------------

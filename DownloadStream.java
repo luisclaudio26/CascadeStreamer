@@ -40,6 +40,13 @@ public class DownloadStream extends Thread
 	//--------------------------
 	//-------- Methods ---------
 	//--------------------------
+	/**
+	 * This effectively unsets Running flag
+	 * and closes socket, which should cause run()
+	 * to end. It is safe to call this multiple times
+	 * (which will happen often!), even if thread
+	 * is already dead.
+	 */
 	public void shutdown()
 	{
 		this.running = false;
@@ -62,21 +69,41 @@ public class DownloadStream extends Thread
 			//this blocks until something is received on socket
 			try 
 			{
+				System.out.print("Waiting packet...");
 				this.socket.receive(packet);
+				System.out.println("got it!");
 				
 				//unpack data and write to client. TODO: ensure that offset is really 0
 				byte[] data = packet.getData();
 				String data_s = new String(data, 0, packet.getLength());
 				
-				//TODO: Here we should analyze the header and decide whether to push_data
-				//or to send a eot() signal.
-				this.target.push_data(data_s);
+				//get code (first three characters) of the packet
+				String code = data_s.substring(0, 3);
+				
+				if(code.equals(MessageCode.STREAM_PACKET.code_string()))
+					this.target.push_data(data_s);
+				else if(code.equals(MessageCode.END_OF_TRANSMISSION.code_string()))
+				{
+					this.target.eot();
+					
+					//Well, after lots of deadlock problems and complicated solutions,
+					//this is it: there's no reason for a DownloadStream thread to be
+					//remain open if transmission has ended. So we just close it from
+					//here.
+					this.shutdown();
+				}
+				else
+					System.err.println("Packet received is in wrong format.");
 			} 
 			catch (IOException e) 
 			{
 				//When we close the socket, an exception will be risen; is it safe to ignore
 				//it, 'though, because RUNNING flag is set to false.
-				if(!running) return;
+				if(!running)
+				{
+					System.out.println("DownloadStream is shutting down.");
+					return;
+				}
 				
 				//if we reach this point, it is so because exception was thrown
 				//while thread was supposed to be running normally; log the error.
@@ -85,5 +112,4 @@ public class DownloadStream extends Thread
 			}
 		}
 	}
-
 }
